@@ -132,11 +132,11 @@ def delete_archive(webdav_task_dir, archive_path, project_name):
         os.remove(archive)
 
 
-def check_requirements(path, dirname, resource_path, test_path, libs_path, archive_path):
-    if not os.path.isdir(os.path.join(path, dirname, resource_path)) \
-            or not os.path.isdir(os.path.join(path, dirname, test_path)) \
-            or not os.path.isdir(os.path.join(path, libs_path))\
-            or not os.path.isdir(os.path.join(path, dirname, archive_path)):
+def check_requirements(webdav_path, task_dir, resource_path, test_path, libs_path, archive_path):
+    if not os.path.isdir(os.path.join(webdav_path, task_dir, resource_path)) \
+            or not os.path.isdir(os.path.join(webdav_path, task_dir, test_path)) \
+            or not os.path.isdir(os.path.join(webdav_path, libs_path))\
+            or not os.path.isdir(os.path.join(webdav_path, task_dir, archive_path)):
         print('The task files don\'t respect the desire structure')
         return False
     return True
