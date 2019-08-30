@@ -159,7 +159,7 @@ def run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, 
 def process_args(argv):
     webdav_path = ''
     task_dir = ''
-    course_id = 'LINGI1402'
+    course_id = 'LEPL1402'
     libs_path = '$common/libs'
     resources_path = 'public'
     test_path = 'unit_test'
