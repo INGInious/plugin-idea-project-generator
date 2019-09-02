@@ -1,0 +1,78 @@
+$def with (course, task, libraries_path, resources_path, test_path, archive_path)
+
+$#
+$# This file is part of INGInious. See the LICENSE and the COPYRIGHTS files for
+$# more information about the licensing of this file.
+$#
+
+$var title: $:course.get_name(user_manager.session_language()) - Project Generator Settings
+
+$var Column: $:template_helper.call('course_admin_menu',course=course,current='project_generator')
+
+$def NavbarF():
+<nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="$get_homepath()/course/$course.get_id()">$course.get_name(user_manager.session_language())</a></li>
+            <li class="breadcrumb-item"><a href="$get_homepath()/admin/$course.get_id()" title="Administration" data-toggle="tooltip" data-placement="bottom">
+                <i class="fa fa-user-secret"></i></a></li>
+            <li class="breadcrumb-item active"><a href="#"><i class="fa fa-file-archive-o"></i> Project Generator <span class="sr-only">(current)</span></a></li>
+        </ol>
+    </nav>
+$var Navbar: $:NavbarF()
+
+<h2>IntelliJ Project Generator</h2>
+
+<div class="card mb-3">
+    <div class="card-header" role="tab">
+            Project Generator settings
+    </div>
+    <div class="card-body">
+        <form method="post">
+            <input type="hidden" name="action" value="config" />
+            <div class="row form-group">
+                <label class="col-sm-2 control-label">Task to generate</label>
+                <div class="col-sm-10">
+                     <label>
+                        <input type="radio" value="true" name="active"/> All tasks
+                    </label><br/>
+                    <label>
+                        <input type="radio" value="false" name="active" id="active"/>
+                            A specific task name :
+                            <div class="col-sm-auto">
+                                <input type="text" class="form-control" id="task_id" name="task_id" placeholder="specific task name" value=$task>
+                            </div>
+                    </label>
+                </div>
+            </div>
+            <div class="row form-group">
+                <label class="col-sm-2 control-label">Path to Libraries</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="libraries_path" name="libraries_path" placeholder="the path to the library" value="$libraries_path">
+                </div>
+            </div>
+            <div class="row form-group">
+                <label class="col-sm-2 control-label">Path to resources</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="resources_path" name="resources_path" placeholder="the path inside the task to the resources" value="$resources_path">
+                </div>
+            </div>
+            <div class="row form-group">
+                <label class="col-sm-2 control-label">Path to tests</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="test_path" name="test_path" placeholder="the path inside the task to the tests" value="$test_path">
+                </div>
+            </div>
+            <div class="row form-group">
+                <label class="col-sm-2 control-label">Path to archives</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="archive_path" name="archive_path" placeholder="the path inside the task where the archive will be generated" value="$archive_path">
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-block btn-primary">
+                    <i class="fa fa-file-archive-o"></i> Generate Archives
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
