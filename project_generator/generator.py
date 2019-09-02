@@ -1,7 +1,27 @@
 #!/usr/bin/python
 
-import os, sys, shutil, argparse
+import os, shutil, argparse
 import xml.etree.ElementTree as ET
+
+
+def has_classes(path):
+    files = os.listdir(path)
+    for file in files:
+        if '.java' in file:
+            return True
+    return False
+
+
+def run_all(webdav_path, course_id, libs_path, resources_path, test_path, archive_path):
+    dirs = os.listdir(webdav_path)
+    for dir in dirs:
+        full_path = os.path.join(webdav_path, dir)
+        if os.path.isdir(full_path):
+            requirement = check_requirements(webdav_path, dir, resources_path, test_path, libs_path,
+                                                       archive_path)
+            if process_requirements(requirement):
+                if has_classes(os.path.join(full_path, resources_path)):
+                    run(webdav_path, dir, course_id, libs_path, resources_path, test_path, archive_path, requirement)
 
 
 def create_structure(webdav_path, project_name):
@@ -27,7 +47,7 @@ def gen_classes(webdav_path, src_folder, resource_path):
     files = os.listdir(public)
     for file in files:
         full_path = os.path.join(public, file)
-        if os.path.isfile(full_path):
+        if os.path.isfile(full_path) and '.java' in file:
             shutil.copy(full_path, java_dir)
 
 
@@ -41,7 +61,7 @@ def gen_tests(webdav_path, src_folder, test_path, has_tests):
         files = os.listdir(unit_test)
         for file in files:
             full_path = os.path.join(unit_test, file)
-            if os.path.isfile(full_path):
+            if os.path.isfile(full_path) and '.java' in full_path:
                 shutil.copy(full_path, java_dir)
 
 
@@ -140,7 +160,6 @@ def delete_archive(webdav_task_dir, archive_path, project_name):
 
 
 def check_requirements(webdav_path, task_dir, resource_path, test_path, libs_path, archive_path):
-    status = True
     req = {
         'webdav': True,
         'task_path': True,
@@ -152,28 +171,22 @@ def check_requirements(webdav_path, task_dir, resource_path, test_path, libs_pat
     if not os.path.isdir(webdav_path):
         print('The webdav directory is not correct')
         req['webdav'] = False
-        status = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir)):
         print('The task directory is not correct')
         req['task_path'] = False
-        status = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir, resource_path)):
         print('The resource directory is not correct')
         req['resource_path'] = False
-        status = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir, test_path)):
         print('The test directory is not correct')
         req['test_path'] = False
-        status = False
     if not os.path.isdir(os.path.join(webdav_path, libs_path)):
         print('The library directory is not correct')
         req['libs_path'] = False
-        status = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir, archive_path)):
         print('The archive directory is not correct')
         req['archive_path'] = False
-        status = False
-    return status, req
+    return req
 
 
 def run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, archive_path, requirement):
@@ -193,8 +206,9 @@ def run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, 
 def process_requirements(requirement):
     if not requirement['webdav'] or not requirement['task_path'] or not requirement['resource_path'] \
             or not requirement['archive_path']:
-        sys.exit(2)
-    #test_path and lib_path are optional
+        return False
+    return True
+    # test_path and lib_path are optional
 
 
 def process_args():
@@ -204,18 +218,22 @@ def process_args():
     resources_path = 'public'
     test_path = 'unit_test'
     archive_path = 'public'
-    parser = argparse.ArgumentParser()
-    parser.add_argument('task_dir', help='The directory name inside the webdav')
-    parser.add_argument('-p', '--webdav_path', help='The location of the webdav of the course', default=webdav_path)
+    parser = argparse.ArgumentParser(prog="python3 generator")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-task', '--task_dir', help='The directory name inside the webdav')
+    group.add_argument('-A', '--all', help='Generate an IntelliJ project for all tasks inside the webdav',
+                        default=False, action='store_true')
+    parser.add_argument('-wd', '--webdav_path', help='The location of the webdav of the course', default=webdav_path)
     parser.add_argument('-c', '--course_id', help='The course acronym', default=course_id)
     parser.add_argument('-l', '--libraries_path', help='The path inside the webdav to the libraries to include '
                                                   'inside the project', default=libs_path)
     parser.add_argument('-r', '--resources_path', help='The path inside the task_dir to the directory containing'
                                                         ' the classes to be filled by students', default=resources_path)
-    parser.add_argument('-t', '--tests_path', help='The path inside the task_dir to the directory containing '
+    parser.add_argument('-test', '--tests_path', help='The path inside the task_dir to the directory containing '
                                                    'the tests', default=test_path)
-    parser.add_argument('-a', '--archive_path', help='The path inside path_dir to the directory where the archive '
+    parser.add_argument('-arch', '--archive_path', help='The path inside path_dir to the directory where the archive '
                                                      'of the project will be generated', default=archive_path)
+
     args = parser.parse_args()
     task_dir = args.task_dir
     webdav_path = args.webdav_path
@@ -224,10 +242,12 @@ def process_args():
     resources_path = args.resources_path
     test_path = args.tests_path
     archive_path = args.archive_path
-    (status, requirement) = check_requirements(webdav_path, task_dir, resources_path, test_path, libs_path, archive_path)
-    if not status:
-        process_requirements(requirement)
-    run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, archive_path, requirement)
+    if args.all:
+        run_all(webdav_path, course_id, libs_path, resources_path, test_path, archive_path)
+    else:
+        requirement = check_requirements(webdav_path, task_dir, resources_path, test_path, libs_path, archive_path)
+        if process_requirements(requirement):
+            run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, archive_path, requirement)
 
 
 if __name__ == '__main__':
