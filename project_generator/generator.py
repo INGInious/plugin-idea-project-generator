@@ -4,8 +4,11 @@ import os, shutil, argparse
 import xml.etree.ElementTree as ET
 
 
-def has_classes(path):
-    files = os.listdir(path)
+def has_classes(resource_path):
+    """
+    Check if the directory 'resource_path' has java files or not.
+    """
+    files = os.listdir(resource_path)
     for file in files:
         if '.java' in file:
             return True
@@ -13,18 +16,23 @@ def has_classes(path):
 
 
 def run_all(webdav_path, course_id, libs_path, resources_path, test_path, archive_path):
+    """
+    Create a IntelliJ project for all tasks inside the webdav
+    """
     dirs = os.listdir(webdav_path)
     for dir in dirs:
         full_path = os.path.join(webdav_path, dir)
         if os.path.isdir(full_path):
-            requirement = check_requirements(webdav_path, dir, resources_path, test_path, libs_path,
-                                                       archive_path)
+            requirement = check_requirements(webdav_path, dir, resources_path, test_path, libs_path, archive_path)
             if process_requirements(requirement):
                 if has_classes(os.path.join(full_path, resources_path)):
                     run(webdav_path, dir, course_id, libs_path, resources_path, test_path, archive_path, requirement)
 
 
 def create_structure(webdav_path, project_name):
+    """
+    Create the directory that will contain the project
+    """
     new_dir = os.path.join(webdav_path, project_name)
     if os.path.isdir(new_dir):
         shutil.rmtree(new_dir)
@@ -33,12 +41,18 @@ def create_structure(webdav_path, project_name):
 
 
 def gen_src(new_dir):
+    """
+    Create a directory named src
+    """
     src = os.path.join(new_dir, 'src')
     os.mkdir(src)
     return src
 
 
 def gen_classes(webdav_path, src_folder, resource_path):
+    """
+    Copy all java files from 'resource_path' to the 'src/main' directory of the project
+    """
     main_dir = os.path.join(src_folder, 'main')
     os.mkdir(main_dir)
     java_dir = os.path.join(main_dir, 'java')
@@ -52,6 +66,9 @@ def gen_classes(webdav_path, src_folder, resource_path):
 
 
 def gen_tests(webdav_path, src_folder, test_path, has_tests):
+    """
+    Copy all test files from 'test_path' to the 'src/test' directory of the project
+    """
     main_dir = os.path.join(src_folder, 'test')
     os.mkdir(main_dir)
     java_dir = os.path.join(main_dir, 'java')
@@ -66,6 +83,9 @@ def gen_tests(webdav_path, src_folder, test_path, has_tests):
 
 
 def gen_libs(webdav_path, new_dir, libs_path, has_libs):
+    """
+    Copy all libraries from 'libs_path' to the 'libs' directory of the project
+    """
     directory = os.path.join(webdav_path, libs_path)
     libs = os.path.join(new_dir, 'libs')
     os.mkdir(libs)
@@ -81,6 +101,9 @@ def gen_libs(webdav_path, new_dir, libs_path, has_libs):
 
 
 def gen_target(src_foler):
+    """
+    Create the 'target' directory and subdirectories
+    """
     target = os.path.join(src_foler, 'target')
     os.mkdir(target)
     dirs = ['classes', 'generated-sources', 'generated-test-sources', 'test-classes']
@@ -89,6 +112,10 @@ def gen_target(src_foler):
 
 
 def gen_pom(new_dir, project_name, libs, has_libs):
+    """
+    Copy the pom.xml file into the project directory
+    and fill it correctly with the name of the project and the dependencies of the libraries
+    """
     cwd = os.getcwd()
     shutil.copy(os.path.join(cwd, 'pom.xml'), new_dir)
     pom = os.path.join(new_dir, 'pom.xml')
@@ -108,6 +135,10 @@ def gen_pom(new_dir, project_name, libs, has_libs):
 
 
 def indent(elem, level=0):
+    """
+    Indent correctly the 'pom.xml' file
+    Solution find at http://effbot.org/zone/element-lib.htm#prettyprint
+    """
     i = "\n" + level*"  "
     if len(elem):
         if not elem.text or not elem.text.strip():
@@ -124,6 +155,9 @@ def indent(elem, level=0):
 
 
 def put_dependencies(libs, root):
+    """
+    Put the correct dependencies corresponding to all libraries of the project inside the 'pom.xml'
+    """
     dependencies = root.find('dependencies')
     if dependencies is None:
         print("The pom.xml file is broken")
@@ -149,17 +183,27 @@ def put_dependencies(libs, root):
 
 
 def gen_archive(new_dir, webdav_task_dir, archive_path,  project_name):
+    """
+    Create the archive from the generated project
+    """
     shutil.make_archive(os.path.join(webdav_task_dir, archive_path, project_name), 'zip', new_dir)
     shutil.rmtree(new_dir)
 
 
 def delete_archive(webdav_task_dir, archive_path, project_name):
+    """
+    Delete the archive if one exist with the same name (remove an old one)
+    """
     archive = os.path.join(webdav_task_dir, archive_path, project_name) + '.zip'
     if os.path.isfile(archive):
         os.remove(archive)
 
 
 def check_requirements(webdav_path, task_dir, resource_path, test_path, libs_path, archive_path):
+    """
+    Check if the different arguments passed to the program are valid.
+    More precisely check if the directories of the different path are valid.
+    """
     req = {
         'webdav': True,
         'task_path': True,
@@ -190,6 +234,17 @@ def check_requirements(webdav_path, task_dir, resource_path, test_path, libs_pat
 
 
 def run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, archive_path, requirement):
+    """
+    Create an IntelliJ project for the specified task
+    :param webdav_path: A path to the webdav
+    :param task_dir: The name of the task
+    :param course_id: The id of the course (like LEPL1402)
+    :param libs_path: The path inside the webdav to the directory containing the libraries
+    :param resources_path: The path inside the task directory to the directory
+                            containing the java classes to be filled by students
+    :param test_path: The path inside the task directory to the directory containing the tests
+    :param archive_path: The path inside the task directory to the directory where the archive will be generated
+    """
     project_name = course_id + '_' + task_dir  # define project name
     webdav_task_dir = os.path.join(webdav_path, task_dir)  # path to task
     delete_archive(webdav_task_dir, archive_path, project_name)  # delete the project archive if one exists
@@ -204,6 +259,9 @@ def run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, 
 
 
 def process_requirements(requirement):
+    """
+    If the following requirements are not valid, abort the creation of the project
+    """
     if not requirement['webdav'] or not requirement['task_path'] or not requirement['resource_path'] \
             or not requirement['archive_path']:
         return False
@@ -212,13 +270,16 @@ def process_requirements(requirement):
 
 
 def process_args():
+    """
+    Get the arguments of the program and process them
+    """
     webdav_path = os.getcwd()
     course_id = 'LEPL'
     libs_path = '$common/libs'
     resources_path = 'public'
     test_path = 'unit_test'
     archive_path = 'public'
-    parser = argparse.ArgumentParser(prog="python3 generator")
+    parser = argparse.ArgumentParser(prog="python3 generator.py")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-task', '--task_dir', help='The directory name inside the webdav')
     group.add_argument('-A', '--all', help='Generate an IntelliJ project for all tasks inside the webdav',
