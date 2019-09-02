@@ -6,26 +6,30 @@ The project is generated in a zip archive.
 
 ## generator.py usage:
 
-`python3 generator.py -p <webdav_path> -d <task_dir> -c <course_id> [-l <libs_dir> -r <resources_dir> 
--t <tests_dir> -a <archive_path>]`
+```
+usage: generator.py [-h] [-p WEBDAV_PATH] [-c COURSE_ID] [-l LIBRARIES_PATH]
+                    [-r RESOURCES_PATH] [-t TESTS_PATH] [-a ARCHIVE_PATH]
+                    task_dir
 
-### Arguments list:
-#### Mandatory arguments:
-  `-p <webdav_path>` : the path to the directory containing all tasks
-  `-d <task_dir>` : the name of the directory of the task
-  `c <course_id>` : the course acronym (like **LEPL1402**)
-#### Optional arguments:
-  - `-l <libs_dir>` : 
-      - The path from `<webdav_path>` to the directory containing the libraries to include inside the project.
-      - For example is the directory containing the libraries is located at `<webdav_path>/$common/libs`, you should paste `$common/libs`.
-      - By default this value is `$common/libs`. 
-      - The name of the libraries **must be** `<lib_name>-<version>.jar`
-  - `-r <resources_dir>`:
-      - The path from `<task-dir>` to the directory containing the java files that the students must fill
-      - The default value is `public`
-  - `-t <tests_dir>` :
-      - The path from `<task-dir>` to the directory containing the unit-tests given to the students
-      - The default value is `unit_test`
-  - `-a <archive_path>` :
-      - The path from `<task-dir>` to the directory containing where the generated archive of the project will be placed
-      - The default value is `public`
+positional arguments:
+  task_dir              The directory name inside the webdav
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p WEBDAV_PATH, --webdav_path WEBDAV_PATH
+                        The location of the webdav of the course
+  -c COURSE_ID, --course_id COURSE_ID
+                        The course acronym
+  -l LIBRARIES_PATH, --libraries_path LIBRARIES_PATH
+                        The path inside the webdav to the libraries to include
+                        inside the project
+  -r RESOURCES_PATH, --resources_path RESOURCES_PATH
+                        The path inside the task_dir to the directory
+                        containing the classes to be filled by students
+  -t TESTS_PATH, --tests_path TESTS_PATH
+                        The path inside the task_dir to the directory
+                        containing the tests
+  -a ARCHIVE_PATH, --archive_path ARCHIVE_PATH
+                        The path inside path_dir to the directory where the
+                        archive of the project will be generated
+```
