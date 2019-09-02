@@ -18,6 +18,13 @@ def has_classes(resource_path):
 def run_all(webdav_path, course_id, libs_path, resources_path, test_path, archive_path):
     """
     Create a IntelliJ project for all tasks inside the webdav
+    :param webdav_path: A path to the webdav
+    :param course_id: The id of the course (like LEPL1402)
+    :param libs_path: The path inside the webdav to the directory containing the libraries
+    :param resources_path: The path inside the task directory to the directory
+                            containing the java classes to be filled by students
+    :param test_path: The path inside the task directory to the directory containing the tests
+    :param archive_path: The path inside the task directory to the directory where the archive will be generated
     """
     dirs = os.listdir(webdav_path)
     for dir in dirs:
@@ -26,6 +33,7 @@ def run_all(webdav_path, course_id, libs_path, resources_path, test_path, archiv
             requirement = check_requirements(webdav_path, dir, resources_path, test_path, libs_path, archive_path)
             if process_requirements(requirement):
                 if has_classes(os.path.join(full_path, resources_path)):
+                    # Create an archive only if classes are given to students
                     run(webdav_path, dir, course_id, libs_path, resources_path, test_path, archive_path, requirement)
 
 
@@ -121,12 +129,14 @@ def gen_pom(new_dir, project_name, libs, has_libs):
     pom = os.path.join(new_dir, 'pom.xml')
     tree = ET.parse(pom)
     root = tree.getroot()
+    # Add the name of the project to the pom.xml
     artifact_id = root.find('artifactId')
     group_id = root.find('groupId')
     group_id.text = project_name
     artifact_id.text = project_name
     if has_libs:
         put_dependencies(libs, root)
+    # Add these lines to the top of the pom
     root.set('xmlns', 'http://maven.apache.org/POM/4.0.0')
     root.set('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
     root.set('xsi:schemaLocation', 'http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd')
@@ -213,22 +223,22 @@ def check_requirements(webdav_path, task_dir, resource_path, test_path, libs_pat
         'archive_path': True
     }
     if not os.path.isdir(webdav_path):
-        print('The webdav directory is not correct')
+        print('[' + task_dir + '] The webdav directory is not correct')
         req['webdav'] = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir)):
-        print('The task directory is not correct')
+        print('[' + task_dir + '] The task directory is not correct')
         req['task_path'] = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir, resource_path)):
-        print('The resource directory is not correct')
+        print('[' + task_dir + '] The resource directory is not correct')
         req['resource_path'] = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir, test_path)):
-        print('The test directory is not correct')
+        print('[' + task_dir + '] The test directory is not correct')
         req['test_path'] = False
     if not os.path.isdir(os.path.join(webdav_path, libs_path)):
-        print('The library directory is not correct')
+        print('[' + task_dir + '] The library directory is not correct')
         req['libs_path'] = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir, archive_path)):
-        print('The archive directory is not correct')
+        print('[' + task_dir + '] The archive directory is not correct')
         req['archive_path'] = False
     return req
 
@@ -304,6 +314,7 @@ def process_args():
     test_path = args.tests_path
     archive_path = args.archive_path
     if args.all:
+        # if option all set
         run_all(webdav_path, course_id, libs_path, resources_path, test_path, archive_path)
     else:
         requirement = check_requirements(webdav_path, task_dir, resources_path, test_path, libs_path, archive_path)
