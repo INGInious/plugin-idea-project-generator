@@ -15,7 +15,7 @@ def has_classes(resource_path):
     return False
 
 
-def run_all(webdav_path, course_id, libs_path, resources_path, test_path, archive_path):
+def run_all(webdav_path, course_id, libs_path, resources_path, test_path, archive_path, plugin_path):
     """
     Create a IntelliJ project for all tasks inside the webdav
     :param webdav_path: A path to the webdav
@@ -34,7 +34,7 @@ def run_all(webdav_path, course_id, libs_path, resources_path, test_path, archiv
             if process_requirements(requirement):
                 if has_classes(os.path.join(full_path, resources_path)):
                     # Create an archive only if classes are given to students
-                    run(webdav_path, dir, course_id, libs_path, resources_path, test_path, archive_path, requirement)
+                    run(webdav_path, dir, course_id, libs_path, resources_path, test_path, archive_path, requirement, plugin_path)
 
 
 def create_structure(webdav_path, project_name):
@@ -119,13 +119,12 @@ def gen_target(src_foler):
         os.mkdir(os.path.join(target, direct))
 
 
-def gen_pom(new_dir, project_name, libs, has_libs):
+def gen_pom(new_dir, project_name, libs, has_libs, plugin_path):
     """
     Copy the pom.xml file into the project directory
     and fill it correctly with the name of the project and the dependencies of the libraries
     """
-    cwd = os.getcwd()
-    shutil.copy(os.path.join(cwd, 'pom.xml'), new_dir)
+    shutil.copy(os.path.join(plugin_path, 'pom.xml'), new_dir)
     pom = os.path.join(new_dir, 'pom.xml')
     tree = ET.parse(pom)
     root = tree.getroot()
@@ -243,7 +242,7 @@ def check_requirements(webdav_path, task_dir, resource_path, test_path, libs_pat
     return req
 
 
-def run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, archive_path, requirement):
+def run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, archive_path, requirement, plugin_path):
     """
     Create an IntelliJ project for the specified task
     :param webdav_path: A path to the webdav
@@ -264,7 +263,7 @@ def run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, 
     gen_tests(webdav_task_dir, src, test_path, requirement['test_path'])  # add tests if there are tests
     libs = gen_libs(webdav_path, new_dir, libs_path, requirement['libs_path'])  # add libraries if there are libs
     gen_target(new_dir)  # create target directory with sub directories
-    gen_pom(new_dir, project_name, libs, requirement['libs_path'])  # generate pom.xml file
+    gen_pom(new_dir, project_name, libs, requirement['libs_path'], plugin_path)  # generate pom.xml file
     gen_archive(new_dir, webdav_task_dir, archive_path, project_name)  # generate the archive
 
 
@@ -283,6 +282,7 @@ def process_args():
     """
     Get the arguments of the program and process them
     """
+    generator_path = os.getcwd()
     webdav_path = os.getcwd()
     course_id = 'LEPL'
     libs_path = '$common/libs'
@@ -304,6 +304,7 @@ def process_args():
                                                    'the tests', default=test_path)
     parser.add_argument('-arch', '--archive_path', help='The path inside path_dir to the directory where the archive '
                                                      'of the project will be generated', default=archive_path)
+    parser.add_argument('-p', '--plugin_path', help="Path to where the plugin is located")
 
     args = parser.parse_args()
     task_dir = args.task_dir
@@ -313,13 +314,14 @@ def process_args():
     resources_path = args.resources_path
     test_path = args.tests_path
     archive_path = args.archive_path
+    generator_path = args.plugin_path
     if args.all:
         # if option all set
-        run_all(webdav_path, course_id, libs_path, resources_path, test_path, archive_path)
+        run_all(webdav_path, course_id, libs_path, resources_path, test_path, archive_path, generator_path)
     else:
         requirement = check_requirements(webdav_path, task_dir, resources_path, test_path, libs_path, archive_path)
         if process_requirements(requirement):
-            run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, archive_path, requirement)
+            run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, archive_path, requirement, generator_path)
 
 
 if __name__ == '__main__':

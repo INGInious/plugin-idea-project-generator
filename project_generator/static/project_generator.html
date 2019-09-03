@@ -1,4 +1,4 @@
-$def with (course, task, libraries_path, resources_path, test_path, archive_path)
+$def with (course, task_id, libraries_path, resources_path, tests_path, archive_path, generated)
 
 $#
 $# This file is part of INGInious. See the LICENSE and the COPYRIGHTS files for
@@ -10,7 +10,7 @@ $var title: $:course.get_name(user_manager.session_language()) - Project Generat
 $var Column: $:template_helper.call('course_admin_menu',course=course,current='project_generator')
 
 $def NavbarF():
-<nav aria-label="breadcrumb">
+    <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="$get_homepath()/course/$course.get_id()">$course.get_name(user_manager.session_language())</a></li>
             <li class="breadcrumb-item"><a href="$get_homepath()/admin/$course.get_id()" title="Administration" data-toggle="tooltip" data-placement="bottom">
@@ -21,29 +21,39 @@ $def NavbarF():
 $var Navbar: $:NavbarF()
 
 <h2>IntelliJ Project Generator</h2>
+$if generated:
+    <div id="archive_generated" class="alert alert-success alert-dismissible" role="alert">
+        <strong>Project generation : </strong>
+        $if task_id is None:
+            The archives of all tasks respecting this structure are created
+        $else:
+            The archive of the task $task_id is created
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    $if task_id is not None:
+        <div>
+            <a role="button" class="btn btn-block btn-info" href="$get_homepath()/course/$course.get_id()/$task_id" aria-pressed="true">
+                <i class="fa fa-arrow-left"></i> Return to task $task_id.
+            </a>
+        </div>
 
+<br>
 <div class="card mb-3">
     <div class="card-header" role="tab">
             Project Generator settings
     </div>
     <div class="card-body">
         <form method="post">
-            <input type="hidden" name="action" value="config" />
-            <div class="row form-group">
-                <label class="col-sm-2 control-label">Task to generate</label>
-                <div class="col-sm-10">
-                     <label>
-                        <input type="radio" value="true" name="active"/> All tasks
-                    </label><br/>
-                    <label>
-                        <input type="radio" value="false" name="active" id="active"/>
-                            A specific task name :
-                            <div class="col-sm-auto">
-                                <input type="text" class="form-control" id="task_id" name="task_id" placeholder="specific task name" value=$task>
-                            </div>
-                    </label>
+            <input type="hidden" name="action" value="generateAllProjects" />
+            $if task_id is not None:
+                <div class="row form-group">
+                    <label class="col-sm-2 control-label">Task to generate :</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="task_to_generate" name="task_to_generate" placeholder="the task for which a project is created" value="$task_id">
+                    </div>
                 </div>
-            </div>
             <div class="row form-group">
                 <label class="col-sm-2 control-label">Path to Libraries</label>
                 <div class="col-sm-10">
@@ -59,7 +69,7 @@ $var Navbar: $:NavbarF()
             <div class="row form-group">
                 <label class="col-sm-2 control-label">Path to tests</label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" id="test_path" name="test_path" placeholder="the path inside the task to the tests" value="$test_path">
+                    <input type="text" class="form-control" id="test_path" name="tests_path" placeholder="the path inside the task to the tests" value="$tests_path">
                 </div>
             </div>
             <div class="row form-group">
@@ -69,7 +79,7 @@ $var Navbar: $:NavbarF()
                 </div>
             </div>
             <div>
-                <button type="submit" class="btn btn-block btn-primary">
+                <button type="submit" class="btn btn-block btn-primary" onclick="">
                     <i class="fa fa-file-archive-o"></i> Generate Archives
                 </button>
             </div>
