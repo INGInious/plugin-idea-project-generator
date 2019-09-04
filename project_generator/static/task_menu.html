@@ -2,15 +2,20 @@ $def with (plugin_path, course, task, libraries_path, resources_path, tests_path
 
 $ staff = user_manager.has_staff_rights_on_course(course)
 
-$if not is_lti() and staff and can_display:
+$if not is_lti() and staff:
     <h3>Project Generator</h3>
     <form method="post" id="generateProjectTaskTest" action="$get_homepath()/admin/$course.get_id()/project_generator">
         <div class="list-group-mb-3">
             <input type="hidden" name="action" value="generateProjectTask" />
             <input type="hidden" name="task" value="$task.get_id()"/>
-            <button class="btn list-group-item list-group-item-action list-group-item-info" type="submit" role="button" aria-pressed="false">
-                <i class="fa fa-file-archive-o fa-fw"></i>&nbsp;Generate IntelliJ Project
-            </button>
+            $if can_display:
+                <button class="btn list-group-item list-group-item-action list-group-item-info" type="submit" role="button" aria-pressed="false">
+                    <i class="fa fa-file-archive-o fa-fw"></i>&nbsp;Generate IntelliJ Project
+                </button>
+            $else:
+                <button class="btn list-group-item list-group-item-action list-group-item-warning" type="submit" role="button" aria-pressed="false">
+                    <i class="fa fa-file-archive-o fa-fw"></i>&nbsp;Generate IntelliJ Project
+                </button>
         </div>
     </form>
 $if can_display:

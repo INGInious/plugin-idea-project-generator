@@ -1,4 +1,4 @@
-$def with (course, task_id, libraries_path, resources_path, tests_path, archive_path, generated)
+$def with (course, task_id, libraries_path, resources_path, tests_path, archive_path, generated, tests_path_ok, libs_path_ok, generation_ok, requirements)
 
 $#
 $# This file is part of INGInious. See the LICENSE and the COPYRIGHTS files for
@@ -8,7 +8,6 @@ $#
 $var title: $:course.get_name(user_manager.session_language()) - Project Generator Settings
 
 $var Column: $:template_helper.call('course_admin_menu',course=course,current='project_generator')
-
 $def NavbarF():
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -21,13 +20,19 @@ $def NavbarF():
 $var Navbar: $:NavbarF()
 
 <h2>IntelliJ Project Generator</h2>
-$if generated:
+$if generated and generation_ok:
     <div id="archive_generated" class="alert alert-success alert-dismissible" role="alert">
-        <strong>Project generation : </strong>
+        <h4>Project generation : </h4>
         $if task_id is None:
-            The archives of all tasks respecting this structure are created
+            <p>The archives of all tasks respecting this structure are created</p>
         $else:
-            The archive of the task $task_id is created
+            <p>The archive of the task $task_id is created</p>
+        $if not tests_path_ok:
+            <hr>
+            <p class="mb-0"><strong>But the tests were not included since the path to the test is not good</strong></p>
+        $if not libs_path_ok:
+            <hr>
+            <p class="mb-0"><strong>But the libraries were not included since the path to the libraries is not good</strong></p>
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
@@ -38,6 +43,18 @@ $if generated:
                 <i class="fa fa-arrow-left"></i> Return to task $task_id.
             </a>
         </div>
+$if generated and not generation_ok:
+    <div id="archive_not_generated" class="alert alert-danger alert-dismissible" role="alert">
+        <h4>Project generation : </h4>
+        <p>The archive was not generated. You can find the details here :</p>
+        $for key, value in requirements.items():
+            $if 'webdav' not in key:
+                <hr>
+                <p>$key : $value</p>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
 
 <br>
 <div class="card mb-3">
@@ -55,25 +72,45 @@ $if generated:
                     </div>
                 </div>
             <div class="row form-group">
-                <label class="col-sm-2 control-label">Path to Libraries</label>
-                <div class="col-sm-10">
-                    <input type="text" class="form-control" id="libraries_path" name="libraries_path" placeholder="the path to the library" value="$libraries_path">
-                </div>
-            </div>
-            <div class="row form-group">
-                <label class="col-sm-2 control-label">Path to resources</label>
+                <label class="col-sm-2 control-label">
+                    $if requirements is not None:
+                        $if not requirements["resource_path"]:
+                            <i class="fa fa-chain-broken" style="color:red;"></i>
+                    Path to resources :
+                </label>
                 <div class="col-sm-10">
                     <input type="text" class="form-control" id="resources_path" name="resources_path" placeholder="the path inside the task to the resources" value="$resources_path">
                 </div>
             </div>
             <div class="row form-group">
-                <label class="col-sm-2 control-label">Path to tests</label>
+                <label class="col-sm-2 control-label">
+                    $if requirements is not None:
+                        $if not requirements["test_path"]:
+                            <i class="fa fa-chain-broken" style="color:red;"></i>
+                    Path to tests :
+                </label>
                 <div class="col-sm-10">
                     <input type="text" class="form-control" id="test_path" name="tests_path" placeholder="the path inside the task to the tests" value="$tests_path">
                 </div>
             </div>
             <div class="row form-group">
-                <label class="col-sm-2 control-label">Path to archives</label>
+                <label class="col-sm-2 control-label">
+                    $if requirements is not None:
+                        $if not requirements["libs_path"]:
+                            <i class="fa fa-chain-broken" style="color:red;"></i>
+                    Path to Libraries :
+                </label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="libraries_path" name="libraries_path" placeholder="the path to the library" value="$libraries_path">
+                </div>
+            </div>
+            <div class="row form-group">
+                <label class="col-sm-2 control-label">
+                    $if requirements is not None:
+                        $if not requirements["archive_path"]:
+                            <i class="fa fa-chain-broken" style="color:red;"></i>
+                    Path to archives :
+                </label>
                 <div class="col-sm-10">
                     <input type="text" class="form-control" id="archive_path" name="archive_path" placeholder="the path inside the task where the archive will be generated" value="$archive_path">
                 </div>

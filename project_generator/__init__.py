@@ -35,6 +35,10 @@ class ProjectGeneratorPage(INGIniousAdminPage):
         course, _ = self.get_course_and_check_rights(course_id, allow_all_staff=True)
         input_data = web.input()
         task_id = None
+        tests_path_ok = True
+        libs_path_ok = True
+        generation_ok = True
+        requirements = None
         # when the button generate archive is pushed
         if input_data.get("action", "") == "generateAllProjects":
             new_data = {
@@ -52,19 +56,28 @@ class ProjectGeneratorPage(INGIniousAdminPage):
                 task_id = input_data["task_to_generate"]
                 requirements = generator.check_requirements(course.get_fs().prefix, task_id,
                                                             new_data["resources_path"], new_data["tests_path"], new_data["libraries_path"], new_data["archive_path"])
-                run(course.get_fs().prefix, task_id, course.get_id(), new_data["libraries_path"],
-                    new_data["resources_path"], new_data["tests_path"], new_data["archive_path"], requirements, PATH_TO_PLUGIN)
+                tests_path_ok = requirements["test_path"]
+                libs_path_ok = requirements["libs_path"]
+                if generator.process_requirements(requirements):
+                    run(course.get_fs().prefix, task_id, course.get_id(), new_data["libraries_path"],
+                        new_data["resources_path"], new_data["tests_path"], new_data["archive_path"], requirements, PATH_TO_PLUGIN)
+                else:
+                    generation_ok = False
             edit_configuration_file(course.get_fs().prefix, new_data)
             return self.display_page(course, task_id, new_data["libraries_path"], new_data["resources_path"],
-                                     new_data["tests_path"], new_data["archive_path"], True)
+                                     new_data["tests_path"], new_data["archive_path"], True, tests_path_ok, libs_path_ok, generation_ok, requirements)
 
         # if an admin went from a test
         elif input_data.get("action", "") == "generateProjectTask":
             data = get_configuration_file(course.get_fs().prefix)
+            task_id = input_data.get("task", "")
             if data is not None:
-                return self.display_page(course, input_data.get("task", ""), libraries_path=data['libraries_path'],
+                requirements = generator.check_requirements(course.get_fs().prefix, task_id,
+                                                                           data["resources_path"], data["tests_path"],
+                                                                           data["libraries_path"], data["archive_path"])
+                return self.display_page(course, task_id, libraries_path=data['libraries_path'],
                                          resources_path=data['resources_path'],
-                                         tests_path=data['tests_path'], archive_path=data['archive_path'])
+                                         tests_path=data['tests_path'], archive_path=data['archive_path'], requirements=requirements)
             else:
                 return self.display_page(course, input_data.get("task", ""))
 
@@ -76,7 +89,7 @@ class ProjectGeneratorPage(INGIniousAdminPage):
             if data is not None and "archive_path" in data:
                 archive_location = data["archive_path"]
             if not has_archive(course, task_id, archive_location):
-                requirements = requirements = generator.check_requirements(course.get_fs().prefix, task_id,
+                requirements = generator.check_requirements(course.get_fs().prefix, task_id,
                                                             data["resources_path"], data["tests_path"], data["libraries_path"], data["archive_path"])
                 run(course.get_fs().prefix, task_id, course.get_id(), data["libraries_path"],
                     data["resources_path"], data["tests_path"], data["archive_path"], requirements,
@@ -84,9 +97,10 @@ class ProjectGeneratorPage(INGIniousAdminPage):
             return web.seeother(self.app.get_homepath() + "/course/" + course_id + "/" + task_id + "/" + course_id + "_" + task_id + '.zip')
 
     def display_page(self, course, task=None, libraries_path=DEFAULT_CONFIG['libraries_path'], resources_path=DEFAULT_CONFIG['resources_path'],
-                     tests_path=DEFAULT_CONFIG['tests_path'], archive_path=DEFAULT_CONFIG['archive_path'], generated=False):
+                     tests_path=DEFAULT_CONFIG['tests_path'], archive_path=DEFAULT_CONFIG['archive_path'],
+                     generated=False, tests_path_ok=True, libs_path_ok=True, generation_ok=True, requirements=None):
         tpl = self.template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, 'static')).project_generator
-        return tpl(course, task, libraries_path, resources_path, tests_path, archive_path, generated)
+        return tpl(course, task, libraries_path, resources_path, tests_path, archive_path, generated, tests_path_ok, libs_path_ok, generation_ok, requirements)
 
 
 def has_archive(course, task_id, archive_location):
@@ -120,8 +134,11 @@ def get_configuration_file(path):
 
 def task_menu(course, task, template_helper):
     data = get_configuration_file(course.get_fs().prefix)
-    can_display = generator.process_requirements(generator.check_requirements(course.get_fs().prefix, task.get_id(), data['resources_path'],
-                                                                              data['tests_path'], data['libraries_path'], data['archive_path']))
+    requirements = generator.check_requirements(course.get_fs().prefix, task.get_id(), data['resources_path'],
+                                                                              data['tests_path'], data['libraries_path'], data['archive_path'])
+    can_display = False
+    if requirements["resource_path"]:
+        can_display = generator.has_classes(course.get_fs().prefix, task.get_id(), data['resources_path'])
     tpl = template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, 'static'), False).task_menu
     return str(tpl(PATH_TO_PLUGIN, course, task, data['libraries_path'], data['resources_path'], data['tests_path'], data['archive_path'], False, can_display))
 

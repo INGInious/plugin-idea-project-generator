@@ -4,11 +4,14 @@ import os, shutil, argparse
 import xml.etree.ElementTree as ET
 
 
-def has_classes(resource_path):
+def has_classes(webdav_path, task_path, resource_path):
     """
     Check if the directory 'resource_path' has java files or not.
     """
-    files = os.listdir(resource_path)
+    full_path = os.path.join(webdav_path, task_path, resource_path)
+    if not os.path.exists(full_path):
+        return False
+    files = os.listdir(full_path)
     for file in files:
         if '.java' in file:
             return True
@@ -32,7 +35,7 @@ def run_all(webdav_path, course_id, libs_path, resources_path, test_path, archiv
         if os.path.isdir(full_path):
             requirement = check_requirements(webdav_path, dir, resources_path, test_path, libs_path, archive_path)
             if process_requirements(requirement):
-                if has_classes(os.path.join(full_path, resources_path)):
+                if has_classes(webdav_path, dir, resources_path):
                     # Create an archive only if classes are given to students
                     run(webdav_path, dir, course_id, libs_path, resources_path, test_path, archive_path, requirement, plugin_path)
 
@@ -304,7 +307,7 @@ def process_args():
                                                    'the tests', default=test_path)
     parser.add_argument('-arch', '--archive_path', help='The path inside path_dir to the directory where the archive '
                                                      'of the project will be generated', default=archive_path)
-    parser.add_argument('-p', '--plugin_path', help="Path to where the plugin is located")
+    parser.add_argument('-p', '--plugin_path', help='Path to the location of this script', default=generator_path)
 
     args = parser.parse_args()
     task_dir = args.task_dir
