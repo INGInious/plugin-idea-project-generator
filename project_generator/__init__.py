@@ -35,6 +35,7 @@ class ProjectGeneratorPage(INGIniousAdminPage):
         course, _ = self.get_course_and_check_rights(course_id, allow_all_staff=True)
         input_data = web.input()
         task_id = None
+        # when the button generate archive is pushed
         if input_data.get("action", "") == "generateAllProjects":
             new_data = {
                 "resources_path": input_data["resources_path"],
@@ -42,9 +43,11 @@ class ProjectGeneratorPage(INGIniousAdminPage):
                 "libraries_path": input_data["libraries_path"],
                 "archive_path": input_data["archive_path"]
             }
+            # if we go directly to the generator page we generate the archive for all tasks
             if "task_to_generate" not in input_data:
                 run_all(course.get_fs().prefix, course.get_id(), new_data["libraries_path"], new_data["resources_path"],
                         new_data["tests_path"], new_data["archive_path"], PATH_TO_PLUGIN)
+            # if we went from a test we generate only the archive for this test
             else:
                 task_id = input_data["task_to_generate"]
                 requirements = generator.check_requirements(course.get_fs().prefix, task_id,
@@ -55,6 +58,7 @@ class ProjectGeneratorPage(INGIniousAdminPage):
             return self.display_page(course, task_id, new_data["libraries_path"], new_data["resources_path"],
                                      new_data["tests_path"], new_data["archive_path"], True)
 
+        # if an admin went from a test
         elif input_data.get("action", "") == "generateProjectTask":
             data = get_configuration_file(course.get_fs().prefix)
             if data is not None:
@@ -64,10 +68,30 @@ class ProjectGeneratorPage(INGIniousAdminPage):
             else:
                 return self.display_page(course, input_data.get("task", ""))
 
+        # if someone push on download project
+        elif input_data.get("action", "") == "download_project":
+            task_id = input_data.get("task", "")
+            data = get_configuration_file(course.get_fs().prefix)
+            archive_location = DEFAULT_CONFIG["archive_path"]
+            if data is not None and "archive_path" in data:
+                archive_location = data["archive_path"]
+            if not has_archive(course, task_id, archive_location):
+                requirements = requirements = generator.check_requirements(course.get_fs().prefix, task_id,
+                                                            data["resources_path"], data["tests_path"], data["libraries_path"], data["archive_path"])
+                run(course.get_fs().prefix, task_id, course.get_id(), data["libraries_path"],
+                    data["resources_path"], data["tests_path"], data["archive_path"], requirements,
+                    PATH_TO_PLUGIN)
+            return web.seeother(self.app.get_homepath() + "/course/" + course_id + "/" + task_id + "/" + course_id + "_" + task_id + '.zip')
+
     def display_page(self, course, task=None, libraries_path=DEFAULT_CONFIG['libraries_path'], resources_path=DEFAULT_CONFIG['resources_path'],
                      tests_path=DEFAULT_CONFIG['tests_path'], archive_path=DEFAULT_CONFIG['archive_path'], generated=False):
         tpl = self.template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, 'static')).project_generator
         return tpl(course, task, libraries_path, resources_path, tests_path, archive_path, generated)
+
+
+def has_archive(course, task_id, archive_location):
+    archive_path = os.path.join(course.get_fs().prefix, task_id, archive_location)
+    return os.path.isfile(os.path.join(archive_path, course.get_id() + "_" + task_id + '.zip'))
 
 
 def edit_configuration_file(path, data):
