@@ -136,11 +136,13 @@ def task_menu(course, task, template_helper):
     data = get_configuration_file(course.get_fs().prefix)
     requirements = generator.check_requirements(course.get_fs().prefix, task.get_id(), data['resources_path'],
                                                                               data['tests_path'], data['libraries_path'], data['archive_path'])
+    requirements_ok = generator.process_requirements(requirements) and requirements['test_path'] and requirements['libs_path']
     can_display = False
+
     if requirements["resource_path"]:
         can_display = generator.has_classes(course.get_fs().prefix, task.get_id(), data['resources_path'])
     tpl = template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, 'static'), False).task_menu
-    return str(tpl(PATH_TO_PLUGIN, course, task, data['libraries_path'], data['resources_path'], data['tests_path'], data['archive_path'], False, can_display))
+    return str(tpl(PATH_TO_PLUGIN, course, task, data['libraries_path'], data['resources_path'], data['tests_path'], data['archive_path'], False, can_display, requirements_ok))
 
 
 def course_admin_menu(course):
