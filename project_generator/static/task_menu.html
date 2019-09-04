@@ -2,8 +2,10 @@ $def with (plugin_path, course, task, libraries_path, resources_path, tests_path
 
 $ staff = user_manager.has_staff_rights_on_course(course)
 
-$if not is_lti() and staff and can_display:
+$if can_display:
     <h3>Project Generator</h3>
+
+$if not is_lti() and staff and can_display:
     <form method="post" id="generateProjectTaskTest" action="$get_homepath()/admin/$course.get_id()/project_generator">
         <div class="list-group-mb-3">
             <input type="hidden" name="action" value="generateProjectTask" />
@@ -19,7 +21,7 @@ $if not is_lti() and staff and can_display:
         </div>
     </form>
 $if can_display:
-    <form method="post" id="download_project" action="$get_homepath()/admin/$course.get_id()/project_generator">
+    <form method="post" id="download_project" action="$get_homepath()/plugins/$course.get_id()/$task.get_id()/project_generator" data-action="courseid=">
         <div class="list-group-mb-3">
             <input type="hidden" name="action" value="download_project" />
             <input type="hidden" name="task" value="$task.get_id()"/>

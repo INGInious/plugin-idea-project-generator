@@ -116,9 +116,14 @@ $if generated and not generation_ok:
                 </div>
             </div>
             <div id="generate_projects">
-                <button type="submit" class="btn btn-block btn-primary">
-                    <i class="fa fa-file-archive-o"></i> Generate Archives
-                </button>
+                $if task_id is None:
+                    <button type="submit" class="btn btn-block btn-primary">
+                        <i class="fa fa-file-archive-o"></i> Generate Archives for all tasks
+                    </button>
+                $else:
+                    <button type="submit" class="btn btn-block btn-primary">
+                        <i class="fa fa-file-archive-o"></i> Generate Archive for the task $task_id
+                    </button>
             </div>
         </form>
     </div>

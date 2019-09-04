@@ -40,7 +40,7 @@ def run_all(webdav_path, course_id, libs_path, resources_path, test_path, archiv
                     run(webdav_path, dir, course_id, libs_path, resources_path, test_path, archive_path, requirement, plugin_path)
 
 
-def create_structure(webdav_path, project_name):
+def _create_structure(webdav_path, project_name):
     """
     Create the directory that will contain the project
     """
@@ -60,7 +60,7 @@ def gen_src(new_dir):
     return src
 
 
-def gen_classes(webdav_path, src_folder, resource_path):
+def _gen_classes(webdav_path, src_folder, resource_path):
     """
     Copy all java files from 'resource_path' to the 'src/main' directory of the project
     """
@@ -76,7 +76,7 @@ def gen_classes(webdav_path, src_folder, resource_path):
             shutil.copy(full_path, java_dir)
 
 
-def gen_tests(webdav_path, src_folder, test_path, has_tests):
+def _gen_tests(webdav_path, src_folder, test_path, has_tests):
     """
     Copy all test files from 'test_path' to the 'src/test' directory of the project
     """
@@ -93,7 +93,7 @@ def gen_tests(webdav_path, src_folder, test_path, has_tests):
                 shutil.copy(full_path, java_dir)
 
 
-def gen_libs(webdav_path, new_dir, libs_path, has_libs):
+def _gen_libs(webdav_path, new_dir, libs_path, has_libs):
     """
     Copy all libraries from 'libs_path' to the 'libs' directory of the project
     """
@@ -111,7 +111,7 @@ def gen_libs(webdav_path, new_dir, libs_path, has_libs):
         return []
 
 
-def gen_target(src_foler):
+def _gen_target(src_foler):
     """
     Create the 'target' directory and subdirectories
     """
@@ -122,7 +122,7 @@ def gen_target(src_foler):
         os.mkdir(os.path.join(target, direct))
 
 
-def gen_pom(new_dir, project_name, libs, has_libs, plugin_path):
+def _gen_pom(new_dir, project_name, libs, has_libs, plugin_path):
     """
     Copy the pom.xml file into the project directory
     and fill it correctly with the name of the project and the dependencies of the libraries
@@ -137,16 +137,16 @@ def gen_pom(new_dir, project_name, libs, has_libs, plugin_path):
     group_id.text = project_name
     artifact_id.text = project_name
     if has_libs:
-        put_dependencies(libs, root)
+        _put_dependencies(libs, root)
     # Add these lines to the top of the pom
     root.set('xmlns', 'http://maven.apache.org/POM/4.0.0')
     root.set('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
     root.set('xsi:schemaLocation', 'http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd')
-    indent(root)
+    _indent(root)
     tree.write(pom, encoding="UTF-8", xml_declaration=True)
 
 
-def indent(elem, level=0):
+def _indent(elem, level=0):
     """
     Indent correctly the 'pom.xml' file
     Solution find at http://effbot.org/zone/element-lib.htm#prettyprint
@@ -158,7 +158,7 @@ def indent(elem, level=0):
         if not elem.tail or not elem.tail.strip():
             elem.tail = i
         for elem in elem:
-            indent(elem, level+1)
+            _indent(elem, level+1)
         if not elem.tail or not elem.tail.strip():
             elem.tail = i
     else:
@@ -166,7 +166,7 @@ def indent(elem, level=0):
             elem.tail = i
 
 
-def put_dependencies(libs, root):
+def _put_dependencies(libs, root):
     """
     Put the correct dependencies corresponding to all libraries of the project inside the 'pom.xml'
     """
@@ -194,7 +194,7 @@ def put_dependencies(libs, root):
         system_path.text = '${project.basedir}/libs/' + fname + '.jar'
 
 
-def gen_archive(new_dir, webdav_task_dir, archive_path,  project_name):
+def _gen_archive(new_dir, webdav_task_dir, archive_path,  project_name):
     """
     Create the archive from the generated project
     """
@@ -202,7 +202,7 @@ def gen_archive(new_dir, webdav_task_dir, archive_path,  project_name):
     shutil.rmtree(new_dir)
 
 
-def delete_archive(webdav_task_dir, archive_path, project_name):
+def _delete_archive(webdav_task_dir, archive_path, project_name):
     """
     Delete the archive if one exist with the same name (remove an old one)
     """
@@ -259,15 +259,15 @@ def run(webdav_path, task_dir, course_id, libs_path, resources_path, test_path, 
     """
     project_name = course_id + '_' + task_dir  # define project name
     webdav_task_dir = os.path.join(webdav_path, task_dir)  # path to task
-    delete_archive(webdav_task_dir, archive_path, project_name)  # delete the project archive if one exists
-    new_dir = create_structure(webdav_task_dir, project_name)  # create the project directory and get the path to it
+    _delete_archive(webdav_task_dir, archive_path, project_name)  # delete the project archive if one exists
+    new_dir = _create_structure(webdav_task_dir, project_name)  # create the project directory and get the path to it
     src = gen_src(new_dir)  # create the src folder
-    gen_classes(webdav_task_dir, src, resources_path)  # add the classes to be filled by students
-    gen_tests(webdav_task_dir, src, test_path, requirement['test_path'])  # add tests if there are tests
-    libs = gen_libs(webdav_path, new_dir, libs_path, requirement['libs_path'])  # add libraries if there are libs
-    gen_target(new_dir)  # create target directory with sub directories
-    gen_pom(new_dir, project_name, libs, requirement['libs_path'], plugin_path)  # generate pom.xml file
-    gen_archive(new_dir, webdav_task_dir, archive_path, project_name)  # generate the archive
+    _gen_classes(webdav_task_dir, src, resources_path)  # add the classes to be filled by students
+    _gen_tests(webdav_task_dir, src, test_path, requirement['test_path'])  # add tests if there are tests
+    libs = _gen_libs(webdav_path, new_dir, libs_path, requirement['libs_path'])  # add libraries if there are libs
+    _gen_target(new_dir)  # create target directory with sub directories
+    _gen_pom(new_dir, project_name, libs, requirement['libs_path'], plugin_path)  # generate pom.xml file
+    _gen_archive(new_dir, webdav_task_dir, archive_path, project_name)  # generate the archive
 
 
 def process_requirements(requirement):
