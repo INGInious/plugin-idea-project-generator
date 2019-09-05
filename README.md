@@ -15,7 +15,7 @@ plugins:
 ```
 
 ## Configuration
-To generate an archive, the plugin needs to know the different paths to the directories where are located the files of the project.
+To generate an archive, the plugin needs to know the different paths to the directories where the files needed for the project are located.
 
 4 paths are needed : 
 
@@ -32,7 +32,7 @@ To access this page you just need to go to your administration interface and cli
 
 The configuration is saved inside the file `project_generator_config.yaml` located at root of the course directory.
 
-The structure of the course corresponding to the default configuration of the plugin look like this one (corresponding to the image above) :
+The structure of the course corresponding to the default configuration of the plugin looks like this one (corresponding to the image above) :
 ```bash
 course_id
 ├── $common
@@ -74,13 +74,13 @@ LEPL1402
 
 ## Usage
 
-You can generate an archive of two different manners.
+You can generate an archive in two different ways.
 
 ### Generate one archive for each task
 
 With the page seen above, you can generate an archive for each tasks inside the course that respect the structure you've defined.
 
-An archive is generated for a task only if it contains java classes to be implemented.
+An archive is generated for a task only if it contains java classes to implement.
 
 ### Generate one archive for one specific task
 
@@ -92,8 +92,8 @@ The first one permits you to go to the configuration page and the second to gene
 
 The first one is only accessible for administrators of the course and the second one is accessible of everyone.
 
-The button *Generate IntelliJ Project* can become orange in certain tasks. It means that one of the path in the configuration wrong.
-However you can generate the archive but it will miss the elements corresponding to the wrong path.
+The button *Generate IntelliJ Project* can become orange in certain tasks. It means that one of the path in the configuration is wrong.
+You can generate the archive for these tasks but it will miss the elements corresponding to the wrong path.
 
 ![orange_button](doc/images/orange_button.png) 
 
@@ -105,6 +105,6 @@ When a path is wrong, a little red icons will appear in front of this wrong path
 
 You can generate an archive without tests or libraries. The IntelliJ project will be correctly generate but simply without the missing elements.
 
-### Note
+## Note
 
-**Note also that these two buttons are only accessible if the task contains java classes to be implemented.**
+**Note also that these two buttons are only accessible if the task contains java classes to implement.**
