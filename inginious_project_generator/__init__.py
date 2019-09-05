@@ -8,7 +8,7 @@ import web
 from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
 from inginious.frontend.pages.tasks import TaskPage
 from inginious.common import custom_yaml
-from project_generator.generator import run, run_all
+from inginious_project_generator.generator import run, run_all
 
 __version__ = "0.1.dev0"
 PATH_TO_PLUGIN = os.path.abspath(os.path.dirname(__file__))
@@ -77,7 +77,7 @@ class ProjectGeneratorPage(INGIniousAdminPage):
     def display_page(self, course, task=None, config=None, generated=False, tests_path_ok=True, libs_path_ok=True, generation_ok=True, requirements=None):
         if config is None:
             config = DEFAULT_CONFIG
-        tpl = self.template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, 'static')).project_generator
+        tpl = self.template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, 'templates')).project_generator
         return tpl(course, task, config["libraries_path"], config["resources_path"], config["tests_path"],
                    config["archive_path"], generated, tests_path_ok, libs_path_ok, generation_ok, requirements)
 
@@ -160,7 +160,7 @@ def task_menu(course, task, template_helper):
     can_display = False
     if requirements["resource_path"]:
         can_display = generator.has_classes(course.get_fs().prefix, task.get_id(), data['resources_path'])
-    tpl = template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, 'static'), False).task_menu
+    tpl = template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, 'templates'), False).task_menu
     return str(tpl(PATH_TO_PLUGIN, course, task, data['libraries_path'], data['resources_path'], data['tests_path'], data['archive_path'], False, can_display, requirements_ok))
 
 

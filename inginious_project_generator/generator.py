@@ -225,22 +225,22 @@ def check_requirements(webdav_path, task_dir, resource_path, test_path, libs_pat
         'archive_path': True
     }
     if not os.path.isdir(webdav_path):
-        print('[' + task_dir + '] The webdav directory is not correct')
+        #print('[' + task_dir + '] The webdav directory is not correct')
         req['webdav'] = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir)):
-        print('[' + task_dir + '] The task directory is not correct')
+        #print('[' + task_dir + '] The task directory is not correct')
         req['task_path'] = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir, resource_path)):
-        print('[' + task_dir + '] The resource directory is not correct')
+        #print('[' + task_dir + '] The resource directory is not correct')
         req['resource_path'] = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir, test_path)):
-        print('[' + task_dir + '] The test directory is not correct')
+        #print('[' + task_dir + '] The test directory is not correct')
         req['test_path'] = False
     if not os.path.isdir(os.path.join(webdav_path, libs_path)):
-        print('[' + task_dir + '] The library directory is not correct')
+        #print('[' + task_dir + '] The library directory is not correct')
         req['libs_path'] = False
     if not os.path.isdir(os.path.join(webdav_path, task_dir, archive_path)):
-        print('[' + task_dir + '] The archive directory is not correct')
+        #print('[' + task_dir + '] The archive directory is not correct')
         req['archive_path'] = False
     return req
 

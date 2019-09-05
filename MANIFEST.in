@@ -1,0 +1,2 @@
+recursive-include inginious_project_generator *
+recursive-include inginious_project_generator/templates *

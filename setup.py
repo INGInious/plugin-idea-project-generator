@@ -3,11 +3,11 @@
 
 from setuptools import setup, find_packages
 
-import project_generator
+import inginious_project_generator
 
 setup(
-    name="project_generator",
-    version=project_generator.__version__,
+    name="inginious_project_generator",
+    version=inginious_project_generator.__version__,
     description="Plugin that generates IntelliJ projects",
     packages=find_packages(),
     install_requires=["inginious>=0.5.dev0"],
