@@ -6,7 +6,7 @@ The project is generated in a zip archive.
 
 ## generator.py usage:
 
-```
+``` bash
 usage: python3 generator.py [-h] (-task TASK_DIR | -A) [-wd WEBDAV_PATH]
                             [-c COURSE_ID] [-l LIBRARIES_PATH]
                             [-r RESOURCES_PATH] [-test TESTS_PATH]
