@@ -1,61 +1,68 @@
-$def with (course, task_id, libraries_path, resources_path, tests_path, archive_path, generated, tests_path_ok, libs_path_ok, generation_ok, requirements)
+{% extends "layout.html" %}
 
-$#
-$# This file is part of INGInious. See the LICENSE and the COPYRIGHTS files for
-$# more information about the licensing of this file.
-$#
+{% block title %} {{course.get_name(user_manager.session_language())}} - Project Generator Settings {% endblock %}
 
-$var title: $:course.get_name(user_manager.session_language()) - Project Generator Settings
+{% block column %}
+   {{ template_helper.call('course_admin_menu',course=course,current='project_generator') | safe }}
+{% endblock %}
 
-$var Column: $:template_helper.call('course_admin_menu',course=course,current='project_generator')
-$def NavbarF():
+{% block navbar %}
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="$get_homepath()/course/$course.get_id()">$course.get_name(user_manager.session_language())</a></li>
-            <li class="breadcrumb-item"><a href="$get_homepath()/admin/$course.get_id()" title="Administration" data-toggle="tooltip" data-placement="bottom">
+            <li class="breadcrumb-item"><a href="{{get_homepath()}}/course/{{course.get_id()}}">{{ course.get_name(user_manager.session_language()) }}</a></li>
+            <li class="breadcrumb-item"><a href="{{get_homepath()}}/admin/{{course.get_id()}}" title="Administration" data-toggle="tooltip" data-placement="bottom">
                 <i class="fa fa-user-secret"></i></a></li>
             <li class="breadcrumb-item active"><a href="#"><i class="fa fa-file-archive-o"></i> Project Generator <span class="sr-only">(current)</span></a></li>
         </ol>
     </nav>
-$var Navbar: $:NavbarF()
+{% endblock %}
 
+{% block content %}
 <h2>IntelliJ Project Generator</h2>
-$if generated and generation_ok:
+{% if generated and generation_ok %}
     <div id="archive_generated" class="alert alert-success alert-dismissible" role="alert">
         <h4>Project generation : </h4>
-        $if task_id is None:
+        {% if task_id is none %}
             <p>The archives of all tasks respecting this structure are created</p>
-        $else:
-            <p>The archive of the task $task_id is created</p>
-        $if not tests_path_ok:
+        {% else %}
+            <p>The archive of the task {{task_id}} is created</p>
+        {% endif %}
+        {% if not tests_path_ok %}
             <hr>
             <p class="mb-0"><strong>But the tests were not included since the path to the test is not good</strong></p>
-        $if not libs_path_ok:
+        {% endif %}
+        {% if not libs_path_ok %}
             <hr>
             <p class="mb-0"><strong>But the libraries were not included since the path to the libraries is not good</strong></p>
+        {% endif %}
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
-    $if task_id is not None:
+    {% if task_id is not none %}
         <div>
-            <a role="button" class="btn btn-block btn-info" href="$get_homepath()/course/$course.get_id()/$task_id" aria-pressed="true">
-                <i class="fa fa-arrow-left"></i> Return to task $task_id.
+            <a role="button" class="btn btn-block btn-info" href="{{ get_homepath() }}/course/{{ course.get_id() }}/{{ task_id }}" aria-pressed="true">
+                <i class="fa fa-arrow-left"></i> Return to task {{task_id}}.
             </a>
         </div>
-$if generated and not generation_ok:
+    {% endif %}
+{%endif %}
+
+{% if generated and not generation_ok %}
     <div id="archive_not_generated" class="alert alert-danger alert-dismissible" role="alert">
         <h4>Project generation : </h4>
         <p>The archive was not generated. You can find the details here :</p>
-        $for key, value in requirements.items():
-            $if 'webdav' not in key:
+        {% for key, value in requirements.items() %}
+            {% if 'webdav' not in key %}
                 <hr>
-                <p>$key : $value</p>
+                <p>{{key}} : {{value}}</p>
+            {% endif %}
+        {% endfor %}
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
-
+{% endif %}
 <br>
 <div class="card mb-3">
     <div class="card-header" role="tab">
@@ -64,67 +71,78 @@ $if generated and not generation_ok:
     <div class="card-body">
         <form method="post">
             <input type="hidden" name="action" value="generateAllProjects" />
-            $if task_id is not None:
+            {% if task_id is not none %}
                 <div class="row form-group">
                     <label class="col-sm-2 control-label">Task to generate :</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="task_to_generate" name="task_to_generate" placeholder="the task for which a project is created" value="$task_id">
+                        <input type="text" class="form-control" id="task_to_generate" name="task_to_generate" placeholder="the task for which a project is created" value="{{task_id}}">
                     </div>
                 </div>
+            {% endif %}
             <div class="row form-group">
                 <label class="col-sm-2 control-label">
-                    $if requirements is not None:
-                        $if not requirements["resource_path"]:
+                    {% if requirements is not none %}
+                        {% if not requirements["resource_path"] %}
                             <i class="fa fa-chain-broken" style="color:red;"></i>
+                        {% endif %}
+                    {% endif %}
                     Path to resources :
                 </label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" id="resources_path" name="resources_path" placeholder="the path inside the task to the resources" value="$resources_path">
+                    <input type="text" class="form-control" id="resources_path" name="resources_path" placeholder="the path inside the task to the resources" value="{{resources_path}}">
                 </div>
             </div>
             <div class="row form-group">
                 <label class="col-sm-2 control-label">
-                    $if requirements is not None:
-                        $if not requirements["test_path"]:
+                    {% if requirements is not none %}
+                        {% if not requirements["test_path"] %}
                             <i class="fa fa-chain-broken" style="color:red;"></i>
+                        {% endif %}
+                    {% endif %}
                     Path to tests :
                 </label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" id="test_path" name="tests_path" placeholder="the path inside the task to the tests" value="$tests_path">
+                    <input type="text" class="form-control" id="test_path" name="tests_path" placeholder="the path inside the task to the tests" value="{{tests_path}}">
                 </div>
             </div>
             <div class="row form-group">
                 <label class="col-sm-2 control-label">
-                    $if requirements is not None:
-                        $if not requirements["libs_path"]:
+                    {% if requirements is not none %}
+                        {% if not requirements["libs_path"] %}
                             <i class="fa fa-chain-broken" style="color:red;"></i>
+                        {% endif %}
+                    {% endif %}
                     Path to Libraries :
                 </label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" id="libraries_path" name="libraries_path" placeholder="the path to the library" value="$libraries_path">
+                    <input type="text" class="form-control" id="libraries_path" name="libraries_path" placeholder="the path to the library" value="{{libraries_path}}">
                 </div>
             </div>
             <div class="row form-group">
                 <label class="col-sm-2 control-label">
-                    $if requirements is not None:
-                        $if not requirements["archive_path"]:
+                    {%if requirements is not none %}
+                        {% if not requirements["archive_path"] %}
                             <i class="fa fa-chain-broken" style="color:red;"></i>
+                        {% endif %}
+                    {% endif %}
                     Path to archives :
                 </label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" id="archive_path" name="archive_path" placeholder="the path inside the task where the archive will be generated" value="$archive_path">
+                    <input type="text" class="form-control" id="archive_path" name="archive_path" placeholder="the path inside the task where the archive will be generated" value="{{archive_path}}">
                 </div>
             </div>
             <div id="generate_projects">
-                $if task_id is None:
+                {% if task_id is none %}
                     <button type="submit" class="btn btn-block btn-primary">
                         <i class="fa fa-file-archive-o"></i> Generate Archives for all tasks
                     </button>
-                $else:
+                {% else %}
                     <button type="submit" class="btn btn-block btn-primary">
-                        <i class="fa fa-file-archive-o"></i> Generate Archive for the task $task_id
+                        <i class="fa fa-file-archive-o"></i> Generate Archive for the task {{task_id}}
                     </button>
+                {% endif %}
             </div>
         </form>
     </div>
 </div>
+{% endblock %}

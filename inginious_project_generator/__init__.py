@@ -4,7 +4,8 @@
 # more information about the licensing of this file.
 
 import os
-import web
+
+from flask import request, redirect
 from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
 from inginious.frontend.pages.tasks import TaskPage
 from inginious.common import custom_yaml
@@ -34,7 +35,7 @@ class ProjectGeneratorPage(INGIniousAdminPage):
 
     def POST_AUTH(self, course_id):
         course, _ = self.get_course_and_check_rights(course_id, allow_all_staff=True)
-        input_data = web.input()
+        input_data = request.form
         task_id = None
         tests_path_ok = True
         libs_path_ok = True
@@ -77,15 +78,19 @@ class ProjectGeneratorPage(INGIniousAdminPage):
     def display_page(self, course, task=None, config=None, generated=False, tests_path_ok=True, libs_path_ok=True, generation_ok=True, requirements=None):
         if config is None:
             config = DEFAULT_CONFIG
-        tpl = self.template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, 'templates')).project_generator
-        return tpl(course, task, config["libraries_path"], config["resources_path"], config["tests_path"],
-                   config["archive_path"], generated, tests_path_ok, libs_path_ok, generation_ok, requirements)
+        return self.template_helper.render("project_generator.html",
+                                           template_folder=os.path.join(PATH_TO_PLUGIN, 'templates'),
+                                           course=course, task_id=task, libraries_path=config["libraries_path"],
+                                           resources_path=config["resources_path"], tests_path=config["tests_path"],
+                                           archive_path=config["archive_path"], generated=generated,
+                                           tests_path_ok=tests_path_ok, libs_path_ok=libs_path_ok,
+                                           generation_ok=generation_ok, requirements=requirements)
 
 
 class DownloadPage(TaskPage):
     """ Page to download the archive. Also available for students """
     def GET(self, courseid, taskid):
-        return web.seeother(self.app.get_homepath() + "/course/" + courseid + "/" + taskid)
+        return redirect(self.app.get_homepath() + "/course/" + courseid + "/" + taskid)
 
     def POST(self, courseid, taskid):
         course = self.course_factory.get_course(courseid)
@@ -97,7 +102,7 @@ class DownloadPage(TaskPage):
             # We generate an archive if none exists
             requirements = get_requirements(course, taskid, data)
             gen_task_archive(course, taskid, data, requirements)
-        return web.seeother(
+        return redirect(
             self.app.get_homepath() + "/course/" + courseid + "/" + taskid + "/" + courseid + "_" + taskid + '.zip')
 
 
@@ -160,8 +165,11 @@ def task_menu(course, task, template_helper):
     can_display = False
     if requirements["resource_path"]:
         can_display = generator.has_classes(course.get_fs().prefix, task.get_id(), data['resources_path'])
-    tpl = template_helper.get_custom_renderer(os.path.join(PATH_TO_PLUGIN, 'templates'), False).task_menu
-    return str(tpl(PATH_TO_PLUGIN, course, task, data['libraries_path'], data['resources_path'], data['tests_path'], data['archive_path'], False, can_display, requirements_ok))
+    return template_helper.render("task_menu.html", template_folder=os.path.join(PATH_TO_PLUGIN, 'templates'),
+                                  plugin_path=PATH_TO_PLUGIN, course=course, task=task,
+                                  libraries_path=data['libraries_path'], resources_path=data['resources_path'],
+                                  tests_path=data['tests_path'], archive_path=data['archive_path'],
+                                  generated=False, can_display=can_display, requirements_ok=requirements_ok)
 
 
 def course_admin_menu(course):
@@ -169,8 +177,8 @@ def course_admin_menu(course):
 
 
 def init(plugin_manager, _, _2, _3):
-    plugin_manager.add_page('/plugins/([^/]+)/([^/]+)/project_generator', DownloadPage)
-    plugin_manager.add_page('/admin/([^/]+)/project_generator', ProjectGeneratorPage)
+    plugin_manager.add_page('/plugins/<courseid>/<taskid>/project_generator', DownloadPage.as_view("pgdownloadpage"))
+    plugin_manager.add_page('/admin/<course_id>/project_generator', ProjectGeneratorPage.as_view("pggeneratorpage"))
     plugin_manager.add_hook('task_menu', task_menu)
     plugin_manager.add_hook('course_admin_menu', course_admin_menu)
 
