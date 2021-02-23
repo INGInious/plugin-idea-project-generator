@@ -8,12 +8,10 @@ import os
 from flask import request, redirect
 from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
 from inginious.frontend.pages.tasks import TaskPage
-from inginious.common import custom_yaml
 from inginious_project_generator.generator import run, run_all
 
 __version__ = "0.1.dev0"
 PATH_TO_PLUGIN = os.path.abspath(os.path.dirname(__file__))
-CONFIG_FILE_NAME = "project_generator_config.yaml"
 DEFAULT_CONFIG = {
     "resources_path": "public",
     "tests_path": "unit_test",
@@ -27,7 +25,7 @@ class ProjectGeneratorPage(INGIniousAdminPage):
 
     def GET_AUTH(self, course_id):
         course, _ = self.get_course_and_check_rights(course_id, allow_all_staff=True)
-        data = get_configuration_file(course.get_fs().prefix)
+        data = get_configuration_file(course)
         if data is not None:
             return self.display_page(course, config=data)
         else:
@@ -62,12 +60,12 @@ class ProjectGeneratorPage(INGIniousAdminPage):
                     gen_task_archive(course, task_id, new_data, requirements)
                 else:
                     generation_ok = False
-            edit_configuration_file(course.get_fs().prefix, new_data)
+            edit_configuration_file(self.course_factory, course, new_data)
             return self.display_page(course, task_id, new_data, True, tests_path_ok, libs_path_ok, generation_ok, requirements)
 
         # if an admin went from a test
         elif input_data.get("action", "") == "generateProjectTask":
-            data = get_configuration_file(course.get_fs().prefix)
+            data = get_configuration_file(course)
             task_id = input_data.get("task", "")
             if data is not None:
                 requirements = get_requirements(course, task_id, data)
@@ -94,7 +92,7 @@ class DownloadPage(TaskPage):
 
     def POST(self, courseid, taskid):
         course = self.course_factory.get_course(courseid)
-        data = get_configuration_file(course.get_fs().prefix)
+        data = get_configuration_file(course)
         archive_location = DEFAULT_CONFIG["archive_path"]
         if data is not None and "archive_path" in data:
             archive_location = data["archive_path"]
@@ -131,35 +129,21 @@ def has_archive(course, task_id, archive_location):
     return os.path.isfile(os.path.join(archive_path, course.get_id() + "_" + task_id + '.zip'))
 
 
-def edit_configuration_file(path, data):
+def edit_configuration_file(course_factory, course, data):
     """ Edit the configuration file with the new configuration """
-    config_file_path = os.path.join(path, CONFIG_FILE_NAME)
-    if os.path.isfile(config_file_path):
-        stream = open(config_file_path, 'w')
-        custom_yaml.dump(data, stream)
-        stream.close()
-    else:
-        get_configuration_file(path)
+    course_content = course_factory.get_course_descriptor_content(course.get_id())
+    course_content["intellij"] = data
+    course_factory.update_course_descriptor_content(course.get_id(), course_content)
 
 
-def get_configuration_file(path):
+def get_configuration_file(course):
     """ Get the actual configuration from the configuration file"""
-    config_file_path = os.path.join(path, CONFIG_FILE_NAME)
-    if os.path.exists(config_file_path):
-        stream = open(config_file_path, 'r')
-        data = custom_yaml.load(stream)
-        stream.close()
-        return data
-    else:
-        stream = open(config_file_path, 'w')
-        custom_yaml.dump(DEFAULT_CONFIG, stream)
-        stream.close()
-        return DEFAULT_CONFIG
+    return course.get_descriptor().get("intellij", DEFAULT_CONFIG)
 
 
 def task_menu(course, task, template_helper):
     """ Display (or not) the buttons in the task menu """
-    data = get_configuration_file(course.get_fs().prefix)
+    data = get_configuration_file(course)
     requirements = get_requirements(course, task.get_id(), data)
     requirements_ok = generator.process_requirements(requirements) and requirements['test_path'] and requirements['libs_path']
     can_display = False
